@@ -35,3 +35,79 @@ class CoinGeckoClient:
 
             response.raise_for_status()
             return response.json()
+    async def get_market_data(
+        self,
+        coin_id: str | None = None,
+        category: str | None = None,
+        page_num: int = 1,
+        per_page: int = 10,
+    ):
+        async with httpx.AsyncClient(
+            timeout=self.settings.request_timeout
+        ) as client:
+
+            if coin_id and category:
+                market_response = await client.get(
+                    f"{self.settings.coingecko_base_url}/coins/markets",
+                    params={
+                        "vs_currency": "cad",
+                        "ids": coin_id,
+                        "per_page": 1,
+                        "page": 1,
+                    },
+                )
+                market_response.raise_for_status()
+                market_data = market_response.json()
+
+                if not market_data:
+                    return []
+
+                coin_response = await client.get(
+                    f"{self.settings.coingecko_base_url}/coins/{coin_id}"
+                )
+                coin_response.raise_for_status()
+                coin_details = coin_response.json()
+
+                coin_categories = coin_details.get("categories", [])
+
+                categories_response = await client.get(
+                    f"{self.settings.coingecko_base_url}/coins/categories/list"
+                )
+                categories_response.raise_for_status()
+                categories = categories_response.json()
+
+                category_name = next(
+                    (
+                        item["name"]
+                        for item in categories
+                        if item.get("category_id") == category
+                    ),
+                    None,
+                )
+
+                if category_name not in coin_categories:
+                    return []
+                if page_num>1:
+                    return []
+
+                return market_data[:per_page]
+
+            params = {
+                "vs_currency": "cad",
+                "per_page": per_page,
+                "page": page_num,
+            }
+
+            if coin_id:
+                params["ids"] = coin_id
+
+            if category:
+                params["category"] = category
+
+            response = await client.get(
+                f"{self.settings.coingecko_base_url}/coins/markets",
+                params=params,
+            )
+
+            response.raise_for_status()
+            return response.json()

@@ -5,6 +5,7 @@ from app.api.coins import router as coins_router
 from app.api.health import router as health_router
 from app.config import get_settings
 from app.api.categories import router as categories_router
+from app.api.market import router as market_router
 
 settings = get_settings()
 
@@ -17,6 +18,8 @@ app = FastAPI(
 app.include_router(health_router)
 app.include_router(coins_router)
 app.include_router(categories_router)
+app.include_router(market_router)
+
 @app.get("/")
 async def root(_: str = Depends(verify_api_key)):
     return {
