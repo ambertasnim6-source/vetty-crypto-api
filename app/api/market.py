@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from app.dependencies import verify_api_key
 from app.schemas.market import MarketDataResponse
-from app.services.coingecko import CoinGeckoClient
+from app.services.coingecko import coingecko_client
 
 
 router = APIRouter(prefix="/market", tags=["Market Data"])
@@ -24,9 +24,7 @@ async def get_market_data(
             detail="At least one of coin_id or category is required",
         )
 
-    client = CoinGeckoClient()
-
-    market_data = await client.get_market_data(
+    market_data = await coingecko_client.get_market_data(
         coin_id=coin_id,
         category=category,
         page_num=page_num,

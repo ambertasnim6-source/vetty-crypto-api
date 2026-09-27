@@ -2,11 +2,13 @@ import httpx
 
 from app.config import get_settings
 from app.exceptions.errors import AppException
+from app.cache.memory import InMemoryCache
 
 
 class CoinGeckoClient:
     def __init__(self):
         self.settings = get_settings()
+        self.cache = InMemoryCache(ttl=self.settings.cache_ttl)
     async def _get(self, client, url, params=None):
         try:
             response = await client.get(
@@ -35,7 +37,7 @@ class CoinGeckoClient:
                 code="EXTERNAL_SERVICE_UNAVAILABLE",
                 message="Unable to connect to CoinGecko",
                 status_code=503,
-            ) from exc        
+            ) from exc
 
     async def get_coins(self, page_num: int = 1, per_page: int = 10):
         params = {
@@ -73,6 +75,16 @@ class CoinGeckoClient:
         page_num: int = 1,
         per_page: int = 10,
     ):
+        cache_key = (
+            f"market:{coin_id}:{category}:"
+            f"{page_num}:{per_page}"
+        )
+
+        cached_data = self.cache.get(cache_key)
+
+        if cached_data is not None:
+            return cached_data
+
         async with httpx.AsyncClient(
             timeout=self.settings.request_timeout
         ) as client:
@@ -119,11 +131,14 @@ class CoinGeckoClient:
                 )
 
                 if category_name not in coin_categories:
+                    self.cache.set(cache_key, [])
                     return []
                 if page_num>1:
                     return []
 
-                return market_data[:per_page]
+                result= market_data[:per_page]
+                self.cache.set(cache_key, result)
+                return result
 
             params = {
                 "vs_currency": "cad",
@@ -143,4 +158,9 @@ class CoinGeckoClient:
                 params=params,
             )
 
-            return response.json()
+            market_data = response.json()
+
+            self.cache.set(cache_key, market_data)
+
+            return market_data
+coingecko_client = CoinGeckoClient()

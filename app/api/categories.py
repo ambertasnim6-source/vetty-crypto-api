@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Query
 
 from app.dependencies import verify_api_key
 from app.schemas.category import CategoryListResponse
-from app.services.coingecko import CoinGeckoClient
+from app.services.coingecko import coingecko_client
 
 
 router = APIRouter(prefix="/categories", tags=["Categories"])
@@ -16,9 +16,7 @@ async def list_categories(
     per_page: Annotated[int, Query(ge=1, le=100)] = 10,
     _: str = Depends(verify_api_key),
 ):
-    client = CoinGeckoClient()
-
-    categories = await client.get_categories()
+    categories = await coingecko_client.get_categories()
 
     start = (page_num - 1) * per_page
     end = start + per_page
