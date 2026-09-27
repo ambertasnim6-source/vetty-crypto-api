@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     cache_ttl: int = 60
 
     webhook_url: str = ""
-    api_key: str = ""
+    api_key: str = "change-this-secret"
 
     model_config = SettingsConfigDict(
         env_file=".env",
