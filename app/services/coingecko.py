@@ -24,3 +24,14 @@ class CoinGeckoClient:
 
             response.raise_for_status()
             return response.json()
+
+    async def get_categories(self):
+        async with httpx.AsyncClient(
+            timeout=self.settings.request_timeout
+        ) as client:
+            response = await client.get(
+                f"{self.settings.coingecko_base_url}/coins/categories/list"
+            )
+
+            response.raise_for_status()
+            return response.json()
