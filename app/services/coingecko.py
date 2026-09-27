@@ -1,11 +1,41 @@
 import httpx
 
 from app.config import get_settings
+from app.exceptions.errors import AppException
 
 
 class CoinGeckoClient:
     def __init__(self):
         self.settings = get_settings()
+    async def _get(self, client, url, params=None):
+        try:
+            response = await client.get(
+                url,
+                params=params,
+            )
+            response.raise_for_status()
+            return response
+
+        except httpx.TimeoutException as exc:
+            raise AppException(
+                code="EXTERNAL_SERVICE_TIMEOUT",
+                message="CoinGecko request timed out",
+                status_code=504,
+            ) from exc
+
+        except httpx.HTTPStatusError as exc:
+            raise AppException(
+                code="EXTERNAL_SERVICE_ERROR",
+                message="CoinGecko service returned an error",
+                status_code=503,
+            ) from exc
+
+        except httpx.RequestError as exc:
+            raise AppException(
+                code="EXTERNAL_SERVICE_UNAVAILABLE",
+                message="Unable to connect to CoinGecko",
+                status_code=503,
+            ) from exc        
 
     async def get_coins(self, page_num: int = 1, per_page: int = 10):
         params = {
@@ -17,23 +47,24 @@ class CoinGeckoClient:
         async with httpx.AsyncClient(
             timeout=self.settings.request_timeout
         ) as client:
-            response = await client.get(
+            response = await self._get(
+                client,
                 f"{self.settings.coingecko_base_url}/coins/markets",
                 params=params,
             )
 
-            response.raise_for_status()
+
             return response.json()
 
     async def get_categories(self):
         async with httpx.AsyncClient(
             timeout=self.settings.request_timeout
         ) as client:
-            response = await client.get(
+            response = await self._get(
+                client,
                 f"{self.settings.coingecko_base_url}/coins/categories/list"
             )
 
-            response.raise_for_status()
             return response.json()
     async def get_market_data(
         self,
@@ -47,7 +78,8 @@ class CoinGeckoClient:
         ) as client:
 
             if coin_id and category:
-                market_response = await client.get(
+                market_response = await self._get(
+                    client,
                     f"{self.settings.coingecko_base_url}/coins/markets",
                     params={
                         "vs_currency": "cad",
@@ -62,15 +94,16 @@ class CoinGeckoClient:
                 if not market_data:
                     return []
 
-                coin_response = await client.get(
+                coin_response = await self._get(
+                    client,
                     f"{self.settings.coingecko_base_url}/coins/{coin_id}"
                 )
-                coin_response.raise_for_status()
                 coin_details = coin_response.json()
 
                 coin_categories = coin_details.get("categories", [])
 
-                categories_response = await client.get(
+                categories_response = await self._get(
+                    client,
                     f"{self.settings.coingecko_base_url}/coins/categories/list"
                 )
                 categories_response.raise_for_status()
@@ -104,10 +137,10 @@ class CoinGeckoClient:
             if category:
                 params["category"] = category
 
-            response = await client.get(
+            response = await self._get(
+                client,
                 f"{self.settings.coingecko_base_url}/coins/markets",
                 params=params,
             )
 
-            response.raise_for_status()
             return response.json()
