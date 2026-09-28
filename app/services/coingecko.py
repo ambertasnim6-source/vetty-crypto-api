@@ -1,9 +1,12 @@
 import httpx
 
+import logging
 from app.config import get_settings
 from app.exceptions.errors import AppException
 from app.cache.memory import InMemoryCache
 from app.services.webhook import send_webhook
+
+logger = logging.getLogger(__name__)
 
 
 class CoinGeckoClient:
@@ -84,6 +87,7 @@ class CoinGeckoClient:
         cached_data = self.cache.get(cache_key)
 
         if cached_data is not None:
+            logger.info("Market data served from cache",)
             return cached_data
 
         async with httpx.AsyncClient(
