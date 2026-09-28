@@ -6,7 +6,6 @@ from app.dependencies import verify_api_key
 from app.schemas.market import MarketDataResponse
 from app.services.coingecko import coingecko_client
 
-
 router = APIRouter(prefix="/market", tags=["Market Data"])
 
 

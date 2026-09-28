@@ -1,10 +1,10 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
-from app.schemas.coins import CoinListResponse
-from app.dependencies import verify_api_key
-from app.services.coingecko import coingecko_client
 
+from app.dependencies import verify_api_key
+from app.schemas.coins import CoinListResponse
+from app.services.coingecko import coingecko_client
 
 router = APIRouter(prefix="/coins", tags=["Coins"])
 

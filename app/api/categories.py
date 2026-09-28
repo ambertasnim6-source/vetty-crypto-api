@@ -6,7 +6,6 @@ from app.dependencies import verify_api_key
 from app.schemas.category import CategoryListResponse
 from app.services.coingecko import coingecko_client
 
-
 router = APIRouter(prefix="/categories", tags=["Categories"])
 
 

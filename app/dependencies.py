@@ -5,12 +5,11 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.config import get_settings
 
-
 security = HTTPBearer()
 
 
 async def verify_api_key(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    credentials: HTTPAuthorizationCredentials = Depends(security), #noqa: B008
 ) -> str:
     settings = get_settings()
 

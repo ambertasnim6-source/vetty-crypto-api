@@ -1,14 +1,15 @@
-from fastapi import FastAPI
-from fastapi import Depends
-from app.logging_config import setup_logging
-from app.dependencies import verify_api_key
+from fastapi import Depends, FastAPI
+
+from app.api.categories import router as categories_router
 from app.api.coins import router as coins_router
 from app.api.health import router as health_router
-from app.config import get_settings
-from app.api.categories import router as categories_router
 from app.api.market import router as market_router
+from app.config import get_settings
+from app.dependencies import verify_api_key
 from app.exceptions.errors import AppException
 from app.exceptions.handlers import app_exception_handler
+from app.logging_config import setup_logging
+
 settings = get_settings()
 
 setup_logging()
