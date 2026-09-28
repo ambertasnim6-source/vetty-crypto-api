@@ -3,6 +3,7 @@ import httpx
 from app.config import get_settings
 from app.exceptions.errors import AppException
 from app.cache.memory import InMemoryCache
+from app.services.webhook import send_webhook
 
 
 class CoinGeckoClient:
@@ -138,6 +139,16 @@ class CoinGeckoClient:
 
                 result= market_data[:per_page]
                 self.cache.set(cache_key, result)
+                await send_webhook(
+                    {
+                        "event": "market_data_retrieved",
+                        "coin_id": coin_id,
+                        "category": category,
+                        "page_num": page_num,
+                        "per_page": per_page,
+                        "market_data": result,
+                    }
+                )
                 return result
 
             params = {
@@ -161,6 +172,16 @@ class CoinGeckoClient:
             market_data = response.json()
 
             self.cache.set(cache_key, market_data)
+            await send_webhook(
+                {
+                    "event": "market_data_retrieved",
+                    "coin_id": coin_id,
+                    "category": category,
+                    "page_num": page_num,
+                    "per_page": per_page,
+                    "market_data": market_data,
+                }
+            )
 
             return market_data
 coingecko_client = CoinGeckoClient()
