@@ -19,7 +19,7 @@ async def get_market_data(
 ):
     if not coin_id and not category:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="At least one of coin_id or category is required",
         )
 
